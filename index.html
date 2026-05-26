@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="Double Exposure Darkroom — blend two images into a stunning double exposure artwork using AI-powered masking and classic film techniques.">
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self' blob: data:; script-src 'self' blob: https://cdn.jsdelivr.net https://cdn.ably.com 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://api.imgbb.com https://*.ibb.co https://cdn.jsdelivr.net https://images.unsplash.com https://*.ably.io wss://*.ably.io https://api.qrserver.com; worker-src blob:;">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <title>Double Exposure — Darkroom</title>
+  <link rel="stylesheet" href="style.css">
+
+  <!-- ── External Libraries ─────────────────────────────────── -->
+  <!-- MediaPipe AI Segmentation -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"
+    crossorigin="anonymous"></script>
+    
+  <!-- Ably Realtime for Remote Upload -->
+  <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
+</head>
+
+<body>
+
+  <!-- ── Header ──────────────────────────────────────────────── -->
+  <header>
+    <div class="header-rule">
+      <span></span>
+      <i>Darkroom Studio</i>
+      <span></span>
+    </div>
+    <h1>Double<br><em>Exposure</em></h1>
+    <p class="tagline">Analogue Vision · Digital Alchemy</p>
+  </header>
+
+  <!-- ── Main App ────────────────────────────────────────────── -->
+  <main>
+
+    <!-- Step 01: Upload -->
+    <div class="section-header"><span>01 — Load Your Layers</span></div>
+    <div class="upload-grid">
+
+      <!-- Layer I: Portrait / Base -->
+      <div class="upload-col">
+        <div class="upload-zone" id="zone1">
+          <div class="zone-placeholder" id="ph1">
+            <div class="zone-icon">◈</div>
+            <div class="zone-text">
+              Portrait<br>or Subject<br>
+              <span style="opacity:0.4;font-size:0.9em">click · drop</span>
+            </div>
+          </div>
+          <img class="zone-preview" id="prev1" alt="Portrait preview">
+          <div class="zone-overlay">
+            <div class="replace-text">Replace</div>
+          </div>
+        </div>
+        <div class="zone-footer">Layer I — Base</div>
+        <button class="cam-trigger" id="cameraBtn1">📷 Take Selfie</button>
+        <div class="ai-badge" id="aiMaskBadge"></div>
+        <div class="slot-warning" id="warn1"></div>
+        <input type="file" id="file1" accept="image/*">
+      </div>
+
+      <!-- Divider -->
+      <div class="cross-div">
+        <div class="cross-line"></div>
+        <div class="cross-sym">×</div>
+        <div class="cross-line"></div>
+      </div>
+
+      <!-- Layer II: Nature / Texture -->
+      <div class="upload-col">
+        <div class="upload-zone" id="zone2">
+          <div class="zone-placeholder" id="ph2">
+            <div class="zone-icon">◈</div>
+            <div class="zone-text">
+              Nature<br>or Texture<br>
+              <span style="opacity:0.4;font-size:0.9em">click · drop</span>
+            </div>
+          </div>
+          <img class="zone-preview" id="prev2" alt="Scene preview">
+          <div class="zone-overlay">
+            <div class="replace-text">Replace</div>
+          </div>
+        </div>
+        <div class="zone-footer">Layer II — Overlay</div>
+        <button class="cam-trigger" id="cameraBtn2">📷 Take Photo</button>
+        <div class="slot-warning" id="warn2"></div>
+        <input type="file" id="file2" accept="image/*">
+      </div>
+
+    </div><!-- /upload-grid -->
+
+    <!-- Remote Pairing Button -->
+    <div class="upload-footer">
+      <button class="receive-phone-btn" id="receivePhoneBtn">
+        <span>📶 Receive from Phone</span>
+      </button>
+      <div class="remote-status" id="remoteStatus"></div>
+      <button class="disconnect-btn" id="disconnectBtn">✕ Disconnect Phone</button>
+    </div>
+
+    <!-- Quick Texture Gallery for Layer II -->
+    <div class="section-header"><span>02 — Quick Textures</span></div>
+    <div class="texture-gallery" id="textureGallery">
+
+      <!-- Category: Space & Atmosphere -->
+      <button class="tex-card" data-id="photo-1419242902214-272b3f66ee7a">
+        <img class="tex-thumb" loading="lazy" alt="">
+        <span class="tex-name">Milky Way</span>
+      </button>
+
+      <button class="tex-card" data-id="photo-1531366936337-7c912a4589a7">
+        <img class="tex-thumb" loading="lazy" alt="">
+        <span class="tex-name">Aurora</span>
+      </button>
+
+      <button class="tex-card" data-id="photo-1534088568595-a066f410bcda">
+        <img class="tex-thumb" loading="lazy" alt="">
+        <span class="tex-name">Lightning</span>
+      </button>
+
+      <button class="tex-card" data-id="photo-1462331940025-496dfbfc7564">
+        <img class="tex-thumb" loading="lazy" alt="">
+        <span class="tex-name">Nebula</span>
+      </button>
+
+      <!-- Category: Landscape & Nature -->
+      <button class="tex-card" data-id="photo-1441974231531-c6227db76b6e">
+        <img class="tex-thumb" loading="lazy" alt="">
+        <span class="tex-name">Forest Rays</span>
+      </button>
+
+      <button class="tex-card" data-id="photo-1506905925346-21bda4d32df4">
+        <img class="tex-thumb" loading="lazy" alt="">
+        <span class="tex-name">Alpine</span>
+      </button>
+
+      <button class="tex-card" data-id="photo-1505118380757-91f5f5632de0">
+        <img class="tex-thumb" loading="lazy" alt="">
+        <span class="tex-name">Ocean</span>
+      </button>
+
+      <button class="tex-card" data-id="photo-1509316785289-025f5b846b35">
+        <img class="tex-thumb" loading="lazy" alt="">
+        <span class="tex-name">Desert</span>
+      </button>
+
+      <!-- Category: Water & Weather -->
+      <button class="tex-card" data-id="photo-1432405972618-c60b0225b8f9">
+        <img class="tex-thumb" loading="lazy" alt="">
+        <span class="tex-name">Cascade</span>
+      </button>
+
+      <button class="tex-card" data-id="photo-1418065460487-3e41a6c84dc5">
+        <img class="tex-thumb" loading="lazy" alt="">
+        <span class="tex-name">Winter</span>
+      </button>
+
+      <button class="tex-card" data-id="photo-1500382017468-9049fed747ef">
+        <img class="tex-thumb" loading="lazy" alt="">
+        <span class="tex-name">Golden Field</span>
+      </button>
+
+      <button class="tex-card" data-id="photo-1464822759023-fed622ff2c3b">
+        <img class="tex-thumb" loading="lazy" alt="">
+        <span class="tex-name">Storm Peak</span>
+      </button>
+
+      <!-- Category: Floral & Warm -->
+      <button class="tex-card" data-id="photo-1508739773434-c26b3d09e071">
+        <img class="tex-thumb" loading="lazy" alt="">
+        <span class="tex-name">Autumn</span>
+      </button>
+
+      <button class="tex-card" data-id="photo-1474044159687-1ee9f3a51722">
+        <img class="tex-thumb" loading="lazy" alt="">
+        <span class="tex-name">Canyon</span>
+      </button>
+
+      <button class="tex-card" data-id="photo-1522383225653-ed111181a951">
+        <img class="tex-thumb" loading="lazy" alt="">
+        <span class="tex-name">Blossom</span>
+      </button>
+
+      <button class="tex-card" data-id="photo-1469474968028-56623f02e42e">
+        <img class="tex-thumb" loading="lazy" alt="">
+        <span class="tex-name">Mist Valley</span>
+      </button>
+
+    </div><!-- /texture-gallery -->
+
+    <!-- Step 03: Style Preset -->
+    <div class="section-header"><span>03 — Style Preset</span></div>
+    <div class="presets">
+      <button class="preset-btn active" data-preset="classic">
+        <span class="preset-name">Classic</span>
+        <span class="preset-sub">Screen · Sepia</span>
+      </button>
+      <button class="preset-btn" data-preset="forest">
+        <span class="preset-name">Forest</span>
+        <span class="preset-sub">Overlay · Cool</span>
+      </button>
+      <button class="preset-btn" data-preset="ghost">
+        <span class="preset-name">Ghost</span>
+        <span class="preset-sub">Lighten · Pale</span>
+      </button>
+      <button class="preset-btn" data-preset="noir">
+        <span class="preset-name">Noir</span>
+        <span class="preset-sub">Multiply · Dark</span>
+      </button>
+      <button class="preset-btn" data-preset="golden">
+        <span class="preset-name">Golden</span>
+        <span class="preset-sub">Soft Light</span>
+      </button>
+      <button class="preset-btn" data-preset="cosmic">
+        <span class="preset-name">Cosmic</span>
+        <span class="preset-sub">Dodge · Glow</span>
+      </button>
+      <button class="preset-btn" data-preset="dusk">
+        <span class="preset-name">Dusk</span>
+        <span class="preset-sub">Difference · Surreal</span>
+      </button>
+    </div>
+
+    <!-- Step 04: Fine Tune Controls -->
+    <div class="section-header"><span>04 — Fine Tune</span></div>
+    <div class="controls-panel">
+      <div class="controls-grid">
+
+        <!-- Sliders -->
+        <div class="ctrl">
+          <div class="ctrl-row"><label>Blend Opacity</label><span class="ctrl-val" id="vOpacity">65%</span></div>
+          <input type="range" id="sOpacity" min="0" max="100" value="65">
+        </div>
+        <div class="ctrl">
+          <div class="ctrl-row"><label>Contrast</label><span class="ctrl-val" id="vContrast">110%</span></div>
+          <input type="range" id="sContrast" min="50" max="200" value="110">
+        </div>
+        <div class="ctrl">
+          <div class="ctrl-row"><label>Brightness</label><span class="ctrl-val" id="vBrightness">100%</span></div>
+          <input type="range" id="sBrightness" min="50" max="180" value="100">
+        </div>
+        <div class="ctrl">
+          <div class="ctrl-row"><label>Sepia Tone</label><span class="ctrl-val" id="vSepia">30%</span></div>
+          <input type="range" id="sSepia" min="0" max="100" value="30">
+        </div>
+        <div class="ctrl">
+          <div class="ctrl-row"><label>Film Grain</label><span class="ctrl-val" id="vGrain">20%</span></div>
+          <input type="range" id="sGrain" min="0" max="100" value="20">
+        </div>
+        <div class="ctrl">
+          <div class="ctrl-row"><label>Light Leak</label><span class="ctrl-val" id="vLeak">15%</span></div>
+          <input type="range" id="sLeak" min="0" max="100" value="15">
+        </div>
+        <div class="ctrl">
+          <div class="ctrl-row"><label>Halation</label><span class="ctrl-val" id="vHalation">10%</span></div>
+          <input type="range" id="sHalation" min="0" max="100" value="10">
+        </div>
+        <div class="ctrl">
+          <div class="ctrl-row"><label>Sharpness</label><span class="ctrl-val" id="vSharpness">0%</span></div>
+          <input type="range" id="sSharpness" min="0" max="100" value="0">
+        </div>
+
+        <!-- Blend Mode Selector -->
+        <div class="ctrl" style="grid-column:1/-1">
+          <label style="margin-bottom:0.75rem">Blend Mode</label>
+          <div class="blend-row">
+            <button class="blend-btn active" data-mode="screen">Screen</button>
+            <button class="blend-btn" data-mode="multiply">Multiply</button>
+            <button class="blend-btn" data-mode="overlay">Overlay</button>
+            <button class="blend-btn" data-mode="hard-light">Hard Light</button>
+            <button class="blend-btn" data-mode="soft-light">Soft Light</button>
+            <button class="blend-btn" data-mode="lighten">Lighten</button>
+            <button class="blend-btn" data-mode="color-dodge">Dodge</button>
+            <button class="blend-btn" data-mode="color-burn">Burn</button>
+            <button class="blend-btn" data-mode="difference">Difference</button>
+            <button class="blend-btn" data-mode="exclusion">Exclusion</button>
+          </div>
+        </div>
+
+        <!-- Subject Masking Toggle -->
+        <div class="toggle-row">
+          <span class="toggle-label">Subject Masking <span class="mask-badge">AI</span></span>
+          <div class="toggle" id="maskToggle" role="switch" aria-checked="false" aria-label="Toggle subject masking" tabindex="0"></div>
+          <span class="toggle-desc">Isolate subject silhouette</span>
+        </div>
+
+        <!-- High-Res Export Toggle -->
+        <div class="toggle-row" style="margin-top: 1rem;">
+          <span class="toggle-label">High-Res Export</span>
+          <div class="toggle" id="highResToggle" role="switch" aria-checked="false" aria-label="Toggle high-resolution export" tabindex="0"></div>
+          <span class="toggle-desc">Render at original resolution (slower)</span>
+        </div>
+
+      </div><!-- /controls-grid -->
+    </div><!-- /controls-panel -->
+
+    <!-- Generate Button -->
+    <button class="generate-btn" id="generateBtn" disabled>
+      ◆ &nbsp; Develop Exposure &nbsp; ◆
+    </button>
+
+    <!-- Generate Hint -->
+    <p class="generate-hint">Upload both layers to develop</p>
+
+    <!-- Error Message -->
+    <div class="error-msg" id="errorMsg" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- Processing Spinner -->
+    <div class="processing" id="processing">
+      <div class="film-strip">
+        <div class="film-frame"></div>
+        <div class="film-frame"></div>
+        <div class="film-frame"></div>
+        <div class="film-frame"></div>
+        <div class="film-frame"></div>
+      </div>
+      <div class="processing-text">Developing film in the darkroom...</div>
+    </div>
+
+    <!-- Output: Before / After Comparison + Download -->
+    <div class="output-section" id="outputSection">
+
+      <div class="output-header"><span>Developed Exposure</span></div>
+
+      <!-- Comparison slider -->
+      <div class="compare-wrap" id="compareWrap">
+        <img class="compare-after" id="resultImg" src="" alt="Double exposure result">
+
+        <div class="compare-before-wrap" id="beforeWrap">
+          <img class="compare-before" id="beforeImg" src="" alt="Original portrait">
+        </div>
+
+        <div class="compare-handle" id="handle">
+          <div class="handle-pill">‹›</div>
+        </div>
+
+        <div class="compare-labels">
+          <span class="compare-label">Before</span>
+          <span class="compare-label">After</span>
+        </div>
+      </div><!-- /compare-wrap -->
+
+      <!-- Download & Reset -->
+      <div class="download-panel">
+        <span class="dl-label">Save as —</span>
+        <div class="dl-btns">
+          <button class="dl-btn primary">JPG</button>
+          <button class="dl-btn">PNG</button>
+          <button class="dl-btn">WEBP</button>
+        </div>
+        <input type="text" id="watermarkText" class="watermark-input" placeholder="✦ Event watermark..." maxlength="50">
+        <button class="dl-btn send-phone-btn" id="sendPhoneBtn" title="Generate QR code to scan on your phone">📱 Send
+          to Phone</button>
+        <button class="reset-btn">↺ New Exposure</button>
+      </div>
+
+
+    </div><!-- /output-section -->
+
+  </main>
+
+  <!-- ── Camera Capture Modal ───────────────────────────────── -->
+  <div class="camera-modal" id="cameraModal" role="dialog" aria-modal="true">
+    <div class="camera-card">
+      <div class="camera-header">
+        <span class="camera-title" id="cameraTitle">Take Selfie</span>
+        <button class="camera-close" id="cameraClose" aria-label="Close">✕</button>
+      </div>
+      <div class="camera-preview">
+        <video id="cameraVideo" autoplay playsinline muted></video>
+        <div class="cam-countdown" id="camCountdown"></div>
+        <div class="cam-error-overlay" id="camErrorOverlay" style="display:none"></div>
+      </div>
+      <canvas id="cameraCanvas" style="display:none"></canvas>
+      <div class="camera-controls">
+        <button class="cam-ctrl-btn" id="cameraFlip">⟳&nbsp;Flip</button>
+        <button class="cam-ctrl-btn capture" id="captureBtn">◉&nbsp;Capture</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Idle Reset Overlay ───────────────────────────────── -->
+  <div class="idle-overlay" id="idleOverlay">
+    <div class="idle-card">
+      <div class="idle-icon">◈</div>
+      <div class="idle-msg">Next person?</div>
+      <div class="idle-counter" id="idleCounter">10</div>
+      <div class="idle-sub">Resetting in seconds…</div>
+      <button class="idle-cancel" id="idleCancelBtn">I’m still here</button>
+    </div>
+  </div>
+
+  <!-- ── Modals ──────────────────────────────────────────────── -->
+  
+  <!-- QR Code Modal (Send to Phone) -->
+  <div class="qr-modal" id="qrModal" role="dialog" aria-modal="true" aria-labelledby="qrTitle">
+    <div class="qr-card">
+      <div class="qr-card-header">
+        <span class="qr-title" id="qrTitle">Scan to receive artwork</span>
+        <button class="qr-close" id="qrClose" aria-label="Close">✕</button>
+      </div>
+      <div class="qr-body">
+        <div id="qrContainer" title="QR Code Loading...">
+          <div class="qr-spinner"></div>
+        </div>
+        <p class="qr-hint" id="qrHint">Scan with your phone camera<br>to download your double exposure.</p>
+        <p class="qr-note" id="qrNote"></p>
+        <button class="share-native-btn" id="shareNativeBtn" style="display:none">Share via System</button>
+        
+        <div class="api-key-form" id="apiKeyForm">
+          <input type="text" id="imgbbKeyInput" class="api-key-input" placeholder="Paste imgbb API Key here..." maxlength="50">
+          <button class="dl-btn api-key-save-btn" id="apiKeySaveBtn">Save & Generate QR</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Receive from Phone Modal -->
+  <div class="qr-modal" id="receiveModal" role="dialog" aria-modal="true">
+    <div class="qr-card">
+      <div class="qr-card-header">
+        <span class="qr-title">Remote Upload</span>
+        <button class="qr-close" id="receiveClose" aria-label="Close">✕</button>
+      </div>
+      <div class="qr-body">
+        <div id="receiveQrContainer"></div>
+        <p class="qr-hint" id="receiveHint">Scan this with your phone<br>to upload photos remotely.</p>
+        
+        <div class="api-key-form" id="ablyKeyForm">
+          <input type="text" id="ablyKeyInput" class="api-key-input" placeholder="Paste Ably API Key here..." maxlength="100">
+          <button class="dl-btn api-key-save-btn" id="ablyKeySaveBtn">Save & Start Session</button>
+          <p class="api-key-note">Get a free key at <b>ably.com</b></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Scripts ────────────────────────────────────────────── -->
+  <script src="qrcode.min.js"></script>
+  <script src="engine.js?v=10"></script>
+
+</body>
+
+</html>
