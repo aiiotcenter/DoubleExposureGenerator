@@ -83,5 +83,5 @@ Additional academic documentation, including the final project report and presen
 
 ## Team Members & Acknowledgments
 
-- Omar Shanaa
-- Prof. Dr. Fadi Alturjman
+- Developer: Omar Shanaa
+- Supervisor: Prof. Dr. Fadi Alturjman
