@@ -1,4 +1,4 @@
-# Double Exposure Darkroom Studio
+# Double Exposure Generator Studio
 
 Analogue Vision · Digital Alchemy
 
